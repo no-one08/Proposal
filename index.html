@@ -264,6 +264,26 @@
             margin-left: 20px;
         }
 
+        /* Back button */
+        .back-btn-small {
+            margin-top: 15px;
+            padding: 10px 30px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #888;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .back-btn-small:hover {
+            border-color: #feca57;
+            color: #feca57;
+            transform: scale(1.05);
+        }
+
         /* Typing effect */
         .typewriter {
             overflow: hidden;
@@ -640,13 +660,45 @@
             0% { transform: scale(0) rotate(0deg); opacity: 1; }
             100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
         }
+
+        /* Music toggle */
+        .music-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .music-toggle:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.1);
+        }
+
+        .music-toggle.muted {
+            opacity: 0.5;
+        }
     </style>
 </head>
 <body>
 
+    <!-- Music Toggle Button -->
+    <div class="music-toggle" id="musicToggle" onclick="toggleMusic()">🎵</div>
+
     <!-- Hidden Audio Player - Auto plays from GitHub -->
     <audio id="bg-music" loop style="display:none;">
-        <source src="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/song.mp3" type="audio/mpeg">
+        <source src="https://raw.githubusercontent.com/no-one08/Proposal/main/song.mp3" type="audio/mpeg">
     </audio>
 
     <div class="bg-animation"></div>
@@ -691,6 +743,8 @@
                 Even when nobody else does."
             </div>
             <button class="reveal-btn" onclick="revealClue(1)">Reveal Next Clue →</button>
+            <br>
+            <button class="back-btn-small" onclick="goBack(1)">← Go Back</button>
         </div>
     </div>
 
@@ -707,6 +761,8 @@
                 I've memorized it all."
             </div>
             <button class="reveal-btn" onclick="revealClue(2)">Reveal Next Clue →</button>
+            <br>
+            <button class="back-btn-small" onclick="goBack(2)">← Go Back</button>
         </div>
     </div>
 
@@ -723,6 +779,8 @@
                 to be the reason for your smile."
             </div>
             <button class="reveal-btn" onclick="revealClue(3)">Reveal Next Clue →</button>
+            <br>
+            <button class="back-btn-small" onclick="goBack(3)">← Go Back</button>
         </div>
     </div>
 
@@ -737,6 +795,7 @@
         <div id="heartMessage" style="margin-top:20px; color:#feca57; opacity:0; transition:all 1s;">
             "My heart is complete when I think of you..."
         </div>
+        <button class="back-btn-small" onclick="goBack(5)" style="margin-top:20px;">← Go Back to Clues</button>
     </div>
 
     <!-- SCREEN 6: The Candlelight Wish -->
@@ -761,6 +820,7 @@
             </div>
             <div class="candle-message" id="candleMessage"></div>
         </div>
+        <button class="back-btn-small" onclick="goBack(6)" style="margin-top:20px;">← Go Back</button>
     </div>
 
     <!-- SCREEN 7: THE GRAND REVEAL -->
@@ -815,7 +875,7 @@
                 
                 <em style="color:#888;">— The person who cares about you</em>
             </p>
-            <button class="back-btn" onclick="goBack()">Take me back to the question 💫</button>
+            <button class="back-btn" onclick="goBackToProposal()">Take me back to the question 💫</button>
         </div>
     </div>
 
@@ -835,26 +895,65 @@
         let currentScreen = 1;
         let candlesBlown = 0;
         let heartPiecesPlaced = 0;
+        let musicPlaying = false;
+        let musicInitialized = false;
 
-        // Auto-play music on page load
-        window.addEventListener('load', function() {
+        // Initialize and auto-play music
+        function initMusic() {
             const music = document.getElementById('bg-music');
-            music.volume = 0.5; // Set volume to 50%
+            music.volume = 0.5;
             
-            // Try to play (some browsers may block autoplay)
+            // Try to play
             const playPromise = music.play();
             
             if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    console.log('Autoplay blocked, will try on first interaction');
-                    // Fallback: play on first click anywhere
-                    document.addEventListener('click', function initAudio() {
-                        music.play();
-                        document.removeEventListener('click', initAudio);
-                    }, { once: true });
+                playPromise.then(() => {
+                    musicPlaying = true;
+                    musicInitialized = true;
+                    document.getElementById('musicToggle').textContent = '🎵';
+                }).catch(error => {
+                    // Autoplay blocked - show muted state
+                    musicPlaying = false;
+                    musicInitialized = true;
+                    document.getElementById('musicToggle').textContent = '🔇';
+                    document.getElementById('musicToggle').classList.add('muted');
+                    console.log('Autoplay blocked. Click the music button to start.');
                 });
             }
-        });
+        }
+
+        // Toggle music on/off
+        function toggleMusic() {
+            const music = document.getElementById('bg-music');
+            const toggle = document.getElementById('musicToggle');
+            
+            if (!musicInitialized) {
+                initMusic();
+                return;
+            }
+            
+            if (musicPlaying) {
+                music.pause();
+                musicPlaying = false;
+                toggle.textContent = '🔇';
+                toggle.classList.add('muted');
+            } else {
+                music.play();
+                musicPlaying = true;
+                toggle.textContent = '🎵';
+                toggle.classList.remove('muted');
+            }
+        }
+
+        // Start music on first user interaction (fallback for autoplay blocks)
+        function tryPlayMusic() {
+            if (!musicInitialized) {
+                initMusic();
+            }
+        }
+
+        // Add click listener to entire document for first interaction
+        document.addEventListener('click', tryPlayMusic, { once: true });
 
         // Create progress dots
         function createDots() {
@@ -891,6 +990,16 @@
             if (currentScreen === 5) initHeartPuzzle();
         }
 
+        // GO BACK function
+        function goBack(fromScreen) {
+            document.getElementById(`screen${fromScreen}`).classList.remove('visible');
+            document.getElementById(`screen${fromScreen}`).classList.add('hidden');
+            currentScreen = fromScreen - 1;
+            document.getElementById(`screen${currentScreen}`).classList.remove('hidden');
+            document.getElementById(`screen${currentScreen}`).classList.add('visible');
+            updateDots();
+        }
+
         // Screen 1: Open Envelope
         function openEnvelope() {
             document.getElementById('envelope').classList.add('open');
@@ -918,6 +1027,8 @@
         // Screen 5: Heart Puzzle
         function initHeartPuzzle() {
             const container = document.getElementById('heartLock');
+            if (container.children.length > 0) return; // Already initialized
+            
             const pieces = ['❤️', '💖', '💕', '💗', '💝'];
             const positions = [
                 {top: '0px', left: '70px'},
@@ -1079,13 +1190,19 @@
             document.getElementById('noScreen').style.display = 'flex';
         }
 
-        function goBack() {
+        function goBackToProposal() {
             document.getElementById('noScreen').style.display = 'none';
             document.getElementById('proposalScene').style.display = 'flex';
         }
 
         // Initialize
         createDots();
+
+        // Try to start music when page loads
+        window.addEventListener('load', function() {
+            // Small delay to ensure DOM is ready
+            setTimeout(initMusic, 500);
+        });
 
         const style = document.createElement('style');
         style.textContent = `
