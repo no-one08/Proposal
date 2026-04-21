@@ -22,14 +22,6 @@
             color: white;
         }
 
-        .game-container {
-            width: 100%;
-            max-width: 800px;
-            height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-
         /* Animated background */
         .bg-animation {
             position: fixed;
@@ -47,12 +39,6 @@
         @keyframes bgShift {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.1); }
-        }
-
-        .floating-particle {
-            position: fixed;
-            pointer-events: none;
-            opacity: 0.6;
         }
 
         /* Screens */
@@ -166,13 +152,6 @@
         }
 
         /* Mystery Clue Cards */
-        .clue-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
-
         .mystery-text {
             font-size: 1.4em;
             color: #feca57;
@@ -233,9 +212,17 @@
             transition: all 0.5s;
         }
 
-        .reveal-btn {
-            margin-top: 30px;
-            padding: 15px 50px;
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .next-btn {
+            padding: 15px 40px;
             background: transparent;
             border: 2px solid #ff6b6b;
             color: #ff6b6b;
@@ -244,41 +231,27 @@
             font-family: 'Georgia', serif;
             font-size: 1.1em;
             transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
         }
 
-        .reveal-btn:hover {
+        .next-btn:hover {
             background: #ff6b6b;
             color: white;
             transform: scale(1.05);
         }
 
-        .reveal-btn::after {
-            content: '→';
-            margin-left: 10px;
-            transition: all 0.3s;
-        }
-
-        .reveal-btn:hover::after {
-            margin-left: 20px;
-        }
-
-        /* Back button */
-        .back-btn-small {
-            margin-top: 15px;
-            padding: 10px 30px;
+        .prev-btn {
+            padding: 15px 40px;
             background: transparent;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             color: #888;
-            border-radius: 30px;
+            border-radius: 50px;
             cursor: pointer;
             font-family: 'Georgia', serif;
-            font-size: 0.9em;
+            font-size: 1.1em;
             transition: all 0.3s;
         }
 
-        .back-btn-small:hover {
+        .prev-btn:hover {
             border-color: #feca57;
             color: #feca57;
             transform: scale(1.05);
@@ -680,30 +653,6 @@
             background: #feca57;
         }
 
-        /* Responsive */
-        @media (max-width: 600px) {
-            .envelope { width: 250px; height: 170px; }
-            .proposal-card { padding: 30px 20px; }
-            .proposal-card h1 { font-size: 2em; }
-            .candle-scene { gap: 20px; padding: 20px; }
-            .no-content { padding: 30px 20px; }
-            .no-content h2 { font-size: 1.8em; }
-            .celebration h2 { font-size: 2.5em; }
-            .celebration .poem { font-size: 1.1em; }
-        }
-
-        /* Sparkle effect */
-        .sparkle {
-            position: fixed;
-            pointer-events: none;
-            animation: sparkleAnim 2s linear forwards;
-        }
-
-        @keyframes sparkleAnim {
-            0% { transform: scale(0) rotate(0deg); opacity: 1; }
-            100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
-        }
-
         /* Music toggle */
         .music-toggle {
             position: fixed;
@@ -732,6 +681,32 @@
         .music-toggle.muted {
             opacity: 0.5;
         }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .envelope { width: 250px; height: 170px; }
+            .proposal-card { padding: 30px 20px; }
+            .proposal-card h1 { font-size: 2em; }
+            .candle-scene { gap: 20px; padding: 20px; }
+            .no-content { padding: 30px 20px; }
+            .no-content h2 { font-size: 1.8em; }
+            .celebration h2 { font-size: 2.5em; }
+            .celebration .poem { font-size: 1.1em; }
+            .nav-buttons { flex-direction: column; align-items: center; }
+            .next-btn, .prev-btn { width: 200px; }
+        }
+
+        /* Sparkle effect */
+        .sparkle {
+            position: fixed;
+            pointer-events: none;
+            animation: sparkleAnim 2s linear forwards;
+        }
+
+        @keyframes sparkleAnim {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -739,7 +714,7 @@
     <!-- Music Toggle Button -->
     <div class="music-toggle" id="musicToggle" onclick="toggleMusic()">🎵</div>
 
-    <!-- Hidden Audio Player - Auto plays from GitHub -->
+    <!-- Hidden Audio Player -->
     <audio id="bg-music" loop style="display:none;">
         <source src="https://raw.githubusercontent.com/no-one08/Proposal/main/song.mp3" type="audio/mpeg">
     </audio>
@@ -785,9 +760,10 @@
                 <span class="secret">laugh at my terrible jokes</span>...<br><br>
                 Even when nobody else does."
             </div>
-            <button class="reveal-btn" onclick="revealClue(1)">Reveal Next Clue →</button>
-            <br>
-            <button class="back-btn-small" onclick="goBack(2)">← Go Back</button>
+            <div class="nav-buttons">
+                <button class="prev-btn" onclick="goToScreen(1)">← Previous</button>
+                <button class="next-btn" onclick="goToScreen(3)">Next Clue →</button>
+            </div>
         </div>
     </div>
 
@@ -803,9 +779,10 @@
                 The way you <span class="secret">twirl your hair when nervous</span>...<br><br>
                 I've memorized it all."
             </div>
-            <button class="reveal-btn" onclick="revealClue(2)">Reveal Next Clue →</button>
-            <br>
-            <button class="back-btn-small" onclick="goBack(3)">← Go Back</button>
+            <div class="nav-buttons">
+                <button class="prev-btn" onclick="goToScreen(2)">← Previous</button>
+                <button class="next-btn" onclick="goToScreen(4)">Next Clue →</button>
+            </div>
         </div>
     </div>
 
@@ -821,9 +798,10 @@
                 what it would feel like to hold your hand,<br>
                 to be the reason for your smile."
             </div>
-            <button class="reveal-btn" onclick="revealClue(3)">Reveal Next Clue →</button>
-            <br>
-            <button class="back-btn-small" onclick="goBack(4)">← Go Back</button>
+            <div class="nav-buttons">
+                <button class="prev-btn" onclick="goToScreen(3)">← Previous</button>
+                <button class="next-btn" onclick="goToScreen(5)">Next Clue →</button>
+            </div>
         </div>
     </div>
 
@@ -838,7 +816,9 @@
         <div id="heartMessage" style="margin-top:20px; color:#feca57; opacity:0; transition:all 1s;">
             "My heart is complete when I think of you..."
         </div>
-        <button class="back-btn-small" onclick="goBack(5)" style="margin-top:20px;">← Go Back to Clues</button>
+        <div class="nav-buttons">
+            <button class="prev-btn" onclick="goToScreen(4)">← Previous</button>
+        </div>
     </div>
 
     <!-- SCREEN 6: The Candlelight Wish -->
@@ -863,7 +843,9 @@
             </div>
             <div class="candle-message" id="candleMessage"></div>
         </div>
-        <button class="back-btn-small" onclick="goBack(6)" style="margin-top:20px;">← Go Back</button>
+        <div class="nav-buttons">
+            <button class="prev-btn" onclick="goToScreen(5)">← Previous</button>
+        </div>
     </div>
 
     <!-- SCREEN 7: THE GRAND REVEAL -->
@@ -999,7 +981,6 @@
                     musicInitialized = true;
                     document.getElementById('musicToggle').textContent = '🔇';
                     document.getElementById('musicToggle').classList.add('muted');
-                    console.log('Autoplay blocked. Click the music button to start.');
                 });
             }
         }
@@ -1027,15 +1008,6 @@
             }
         }
 
-        // Start music on first user interaction (fallback for autoplay blocks)
-        function tryPlayMusic() {
-            if (!musicInitialized) {
-                initMusic();
-            }
-        }
-
-        document.addEventListener('click', tryPlayMusic, { once: true });
-
         // Create progress dots
         function createDots() {
             const container = document.getElementById('progressDots');
@@ -1057,14 +1029,13 @@
             }
         }
 
-        function showScreen(screenNum) {
-            // Hide all screens first
-            for (let i = 1; i <= 6; i++) {
-                const screen = document.getElementById(`screen${i}`);
-                if (screen) {
-                    screen.classList.remove('visible');
-                    screen.classList.add('hidden');
-                }
+        // Main navigation function - GO TO ANY SCREEN
+        function goToScreen(screenNum) {
+            // Hide current screen
+            const current = document.getElementById(`screen${currentScreen}`);
+            if (current) {
+                current.classList.remove('visible');
+                current.classList.add('hidden');
             }
             
             // Show target screen
@@ -1076,41 +1047,22 @@
             
             currentScreen = screenNum;
             updateDots();
+            
+            // Initialize heart puzzle if going to screen 5
+            if (screenNum === 5) initHeartPuzzle();
         }
 
-        function nextScreen() {
-            showScreen(currentScreen + 1);
-            if (currentScreen === 5) initHeartPuzzle();
-        }
-
-        // GO BACK - Fixed to work properly
-        function goBack(fromScreen) {
-            const prevScreen = fromScreen - 1;
-            showScreen(prevScreen);
-        }
-
-        // Screen 1: Open Envelope
+        // Screen 1: Open Envelope - ALSO STARTS MUSIC
         function openEnvelope() {
+            // Start music when opening the letter
+            if (!musicInitialized) {
+                initMusic();
+            }
+            
             document.getElementById('envelope').classList.add('open');
             setTimeout(() => {
-                nextScreen();
+                goToScreen(2);
             }, 2500);
-        }
-
-        // Screen 2-4: Reveal Clues
-        function revealClue(num) {
-            const box = document.getElementById(`clue${num}`);
-            box.classList.add('revealed');
-            
-            const secrets = box.querySelectorAll('.secret');
-            secrets.forEach(s => {
-                s.style.color = '#ff6b6b';
-                s.style.textShadow = '0 0 10px rgba(255, 107, 107, 0.5)';
-            });
-            
-            setTimeout(() => {
-                nextScreen();
-            }, 2000);
         }
 
         // Screen 5: Heart Puzzle
@@ -1163,7 +1115,7 @@
             
             if (heartPiecesPlaced >= 5) {
                 document.getElementById('heartMessage').style.opacity = '1';
-                setTimeout(nextScreen, 2000);
+                setTimeout(() => goToScreen(6), 2000);
             }
         }
 
@@ -1240,7 +1192,6 @@
             document.getElementById('proposalScene').style.display = 'none';
             document.getElementById('celebration').style.display = 'flex';
             
-            // Confetti
             for (let i = 0; i < 200; i++) {
                 setTimeout(() => {
                     const c = document.createElement('div');
@@ -1257,7 +1208,6 @@
                 }, i * 20);
             }
             
-            // Heart explosion
             for (let i = 0; i < 40; i++) {
                 setTimeout(() => {
                     const h = document.createElement('div');
@@ -1289,11 +1239,6 @@
 
         // Initialize
         createDots();
-
-        // Try to start music when page loads
-        window.addEventListener('load', function() {
-            setTimeout(initMusic, 500);
-        });
 
         const style = document.createElement('style');
         style.textContent = `
