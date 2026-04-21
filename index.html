@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mystery Heart - A Secret Revealed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background: #0f0f23;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: white;
+        }
+
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(255, 107, 107, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(254, 202, 87, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(255, 159, 243, 0.1) 0%, transparent 50%);
+            animation: bgShift 8s ease-in-out infinite;
+        }
+
+        @keyframes bgShift {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .floating-particle {
+            position: fixed;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Screens */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            transition: all 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hidden { 
+            opacity: 0; 
+            pointer-events: none; 
+            transform: translateX(100px) scale(0.9);
+        }
+
+        .visible { 
+            opacity: 1; 
+            pointer-events: all;
+            transform: translateX(0) scale(1);
+        }
+
+        /* Envelope Opening */
+        .envelope-scene {
+            perspective: 1000px;
+        }
+
+        .envelope {
+            width: 300px;
+            height: 200px;
+            background: #e8d5b7;
+            position: relative;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: all 0.5s;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .envelope:hover {
+            transform: scale(1.05);
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100px;
+            background: #d4c4a8;
+            clip-path: polygon(0 0, 50% 100%, 100% 0);
+            transform-origin: top;
+            transition: all 0.5s;
+            z-index: 2;
+        }
+
+        .envelope.open .envelope-flap {
+            transform: rotateX(180deg);
+        }
+
+        .envelope-body {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 100px;
+            background: #e8d5b7;
+            clip-path: polygon(0 0, 50% 100%, 100% 0);
+            transform: rotate(180deg);
+        }
+
+        .wax-seal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 50px;
+            height: 50px;
+            background: #c0392b;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 3;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .letter {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            background: #fffef8;
+            color: #2c3e50;
+            padding: 30px;
+            font-size: 1.1em;
+            line-height: 1.8;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .envelope.open .letter {
+            transform: translateY(-80px);
+            opacity: 1;
+        }
+
+        /* Mystery Clue Cards */
+        .clue-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .mystery-text {
+            font-size: 1.4em;
+            color: #feca57;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(254, 202, 87, 0.3);
+        }
+
+        .clue-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .clue-box::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #ff9ff3);
+            border-radius: 20px;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: -1;
+        }
+
+        .clue-box.revealed::before {
+            opacity: 0.5;
+        }
+
+        .clue-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .clue-text {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #e0e0e0;
+        }
+
+        .clue-text .secret {
+            color: transparent;
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+            background-clip: text;
+            -webkit-background-clip: text;
+            font-weight: bold;
+            transition: all 0.5s;
+        }
+
+        .reveal-btn {
+            margin-top: 30px;
+            padding: 15px 50px;
+            background: transparent;
+            border: 2px solid #ff6b6b;
+            color: #ff6b6b;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .reveal-btn:hover {
+            background: #ff6b6b;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .reveal-btn::after {
+            content: '→';
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+
+        .reveal-btn:hover::after {
+            margin-left: 20px;
+        }
+
+        /* Typing effect */
+        .typewriter {
+            overflow: hidden;
+            border-right: 3px solid #ff6b6b;
+            white-space: nowrap;
+            animation: typing 2s steps(30, end), blink-caret 0.75s step-end infinite;
+            max-width: 100%;
+        }
+
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #ff6b6b }
+        }
+
+        /* Heart Unlock Puzzle */
+        .heart-lock {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 30px auto;
+        }
+
+        .heart-piece {
+            position: absolute;
+            font-size: 50px;
+            cursor: grab;
+            transition: all 0.3s;
+            filter: grayscale(100%) brightness(0.5);
+        }
+
+        .heart-piece:hover {
+            transform: scale(1.2);
+            filter: grayscale(50%);
+        }
+
+        .heart-piece.placed {
+            filter: grayscale(0%) brightness(1);
+            animation: pieceGlow 2s infinite;
+        }
+
+        @keyframes pieceGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(255, 107, 107, 0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(255, 107, 107, 1)); }
+        }
+
+        .heart-slot {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Candlelight Scene */
+        .candle-scene {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding: 40px;
+            gap: 40px;
+        }
+
+        .candle-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .candle-glow {
+            position: absolute;
+            bottom: 60px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 200, 100, 0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: glowPulse 2s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+        }
+
+        .candle {
+            font-size: 50px;
+            cursor: pointer;
+            transition: all 0.5s;
+            position: relative;
+            z-index: 2;
+        }
+
+        .candle.lit {
+            animation: flicker 0.5s infinite;
+        }
+
+        @keyframes flicker {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.9; transform: scale(0.98); }
+        }
+
+        .candle.blown {
+            filter: grayscale(100%) brightness(0.3);
+            transform: scale(0.9);
+        }
+
+        .candle-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.3em;
+            color: #feca57;
+            opacity: 0;
+            transition: all 1s;
+            text-align: center;
+            width: 300px;
+        }
+
+        /* Final Proposal */
+        .proposal-scene {
+            background: linear-gradient(135deg, #ff6b6b 0%, #feca57 50%, #ff9ff3 100%);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            animation: fadeIn 2s;
+        }
+
+        .proposal-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 60px;
+            border-radius: 30px;
+            max-width: 650px;
+            width: 90%;
+            text-align: center;
+            color: #2c3e50;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+            animation: slideUp 1s ease-out 0.5s both;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .proposal-card h1 {
+            font-size: 3em;
+            color: #e74c3c;
+            margin-bottom: 10px;
+        }
+
+        .proposal-card .subtitle {
+            font-size: 1.3em;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .love-letter {
+            font-size: 1.2em;
+            line-height: 2.2;
+            margin-bottom: 40px;
+            color: #34495e;
+        }
+
+        .love-letter .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .final-buttons {
+            display: flex;
+            gap: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .yes-btn {
+            padding: 20px 60px;
+            font-size: 1.4em;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: all 0.3s;
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(231, 76, 60, 0); }
+        }
+
+        .yes-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .no-btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            background: transparent;
+            color: #7f8c8d;
+            border: 2px solid #bdc3c7;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Georgia', serif;
+        }
+
+        .no-btn:hover {
+            background: #ecf0f1;
+            border-color: #95a5a6;
+        }
+
+        /* No Response Screen */
+        .no-screen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 40px;
+            animation: fadeIn 1s;
+        }
+
+        .no-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 50px;
+            border-radius: 30px;
+            max-width: 600px;
+            width: 90%;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .no-content h2 {
+            font-size: 2.5em;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+
+        .no-content p {
+            font-size: 1.2em;
+            line-height: 2;
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .no-content .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .back-btn {
+            padding: 15px 40px;
+            font-size: 1.1em;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Georgia', serif;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .back-btn:hover {
+            transform: scale(1.05);
+            background: #c0392b;
+        }
+
+        /* Celebration */
+        .celebration {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            animation: fadeIn 1s;
+        }
+
+        .celebration h2 {
+            font-size: 4em;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+
+        /* Progress dots */
+        .progress-dots {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            transition: all 0.5s;
+        }
+
+        .dot.active {
+            background: #ff6b6b;
+            box-shadow: 0 0 10px #ff6b6b;
+            transform: scale(1.3);
+        }
+
+        .dot.completed {
+            background: #feca57;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .envelope { width: 250px; height: 170px; }
+            .proposal-card { padding: 30px 20px; }
+            .proposal-card h1 { font-size: 2em; }
+            .candle-scene { gap: 20px; padding: 20px; }
+            .no-content { padding: 30px 20px; }
+            .no-content h2 { font-size: 1.8em; }
+        }
+
+        /* Sparkle effect */
+        .sparkle {
+            position: fixed;
+            pointer-events: none;
+            animation: sparkleAnim 2s linear forwards;
+        }
+
+        @keyframes sparkleAnim {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Hidden Audio Player - Auto plays from GitHub -->
+    <audio id="bg-music" loop style="display:none;">
+        <source src="https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/song.mp3" type="audio/mpeg">
+    </audio>
+
+    <div class="bg-animation"></div>
+
+    <div class="progress-dots" id="progressDots"></div>
+
+    <!-- SCREEN 1: The Mysterious Letter -->
+    <div class="screen visible" id="screen1">
+        <div style="margin-bottom:30px; text-align:center;">
+            <div class="typewriter" style="font-size:1.5em; color:#feca57; margin-bottom:10px;">
+                You have received a mysterious letter...
+            </div>
+            <p style="color:#888; font-size:0.9em;">Click the envelope to open it</p>
+        </div>
+        
+        <div class="envelope-scene">
+            <div class="envelope" id="envelope" onclick="openEnvelope()">
+                <div class="envelope-flap"></div>
+                <div class="envelope-body"></div>
+                <div class="wax-seal">💌</div>
+                <div class="letter">
+                    <strong style="color:#c0392b; font-size:1.2em;">Dear Kimmy,</strong><br><br>
+                    Someone cares about you deeply.<br>
+                    They've been watching you smile,<br>
+                    dreaming of your laugh,<br>
+                    and gathering courage...<br><br>
+                    <em style="color:#888;">Follow the clues to discover who.</em>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: Clue 1 - The Smile -->
+    <div class="screen hidden" id="screen2">
+        <div class="mystery-text">🔍 Mystery Clue #1</div>
+        <div class="clue-box" id="clue1">
+            <span class="clue-icon">😊</span>
+            <div class="clue-text">
+                "I can't stop thinking about<br>
+                the way your eyes light up when you<br>
+                <span class="secret">laugh at my terrible jokes</span>...<br><br>
+                Even when nobody else does."
+            </div>
+            <button class="reveal-btn" onclick="revealClue(1)">Reveal Next Clue →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: Clue 2 - The Little Things -->
+    <div class="screen hidden" id="screen3">
+        <div class="mystery-text">🔍 Mystery Clue #2</div>
+        <div class="clue-box" id="clue2">
+            <span class="clue-icon">☕</span>
+            <div class="clue-text">
+                "I notice everything.<br>
+                How you take your coffee.<br>
+                The song you hum when you're happy.<br>
+                The way you <span class="secret">twirl your hair when nervous</span>...<br><br>
+                I've memorized it all."
+            </div>
+            <button class="reveal-btn" onclick="revealClue(2)">Reveal Next Clue →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: Clue 3 - The Feelings -->
+    <div class="screen hidden" id="screen4">
+        <div class="mystery-text">🔍 Mystery Clue #3</div>
+        <div class="clue-box" id="clue3">
+            <span class="clue-icon">💭</span>
+            <div class="clue-text">
+                "Last night I couldn't sleep.<br>
+                Not because I had things to do...<br>
+                but because <span class="secret">I kept imagining</span><br>
+                what it would feel like to hold your hand,<br>
+                to be the reason for your smile."
+            </div>
+            <button class="reveal-btn" onclick="revealClue(3)">Reveal Next Clue →</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 5: The Heart Puzzle -->
+    <div class="screen hidden" id="screen5">
+        <div class="mystery-text">🧩 Unlock the Heart</div>
+        <p style="color:#888; margin-bottom:20px; text-align:center;">
+            Someone has left pieces of their heart for you...<br>
+            Click each piece to place it where it belongs.
+        </p>
+        <div class="heart-lock" id="heartLock"></div>
+        <div id="heartMessage" style="margin-top:20px; color:#feca57; opacity:0; transition:all 1s;">
+            "My heart is complete when I think of you..."
+        </div>
+    </div>
+
+    <!-- SCREEN 6: The Candlelight Wish -->
+    <div class="screen hidden" id="screen6">
+        <div class="mystery-text">🕯️ Make a Wish</div>
+        <p style="color:#888; margin-bottom:20px; text-align:center;">
+            Three candles. Three wishes.<br>
+            Blow them out and see what appears...
+        </p>
+        <div class="candle-scene" id="candleScene">
+            <div class="candle-wrapper">
+                <div class="candle-glow"></div>
+                <div class="candle lit" onclick="blowCandle(this, 1)">🕯️</div>
+            </div>
+            <div class="candle-wrapper">
+                <div class="candle-glow"></div>
+                <div class="candle lit" onclick="blowCandle(this, 2)">🕯️</div>
+            </div>
+            <div class="candle-wrapper">
+                <div class="candle-glow"></div>
+                <div class="candle lit" onclick="blowCandle(this, 3)">🕯️</div>
+            </div>
+            <div class="candle-message" id="candleMessage"></div>
+        </div>
+    </div>
+
+    <!-- SCREEN 7: THE GRAND REVEAL -->
+    <div class="proposal-scene" id="proposalScene">
+        <div class="proposal-card">
+            <div style="font-size:70px; margin-bottom:10px;">💍</div>
+            <h1>It's Me, Kimmy</h1>
+            <div class="subtitle">I was your secret admirer all along</div>
+            
+            <div class="love-letter">
+                Every clue was true.<br>
+                Every feeling was real.<br>
+                I didn't just make a game...<br>
+                I made a <span class="highlight">confession</span>.<br><br>
+                
+                I think about you when I wake up.<br>
+                I smile at my phone when I see your name.<br>
+                My heart races every time you're near.<br><br>
+                
+                I don't want to be a mystery anymore.<br>
+                I want to be <span class="highlight">yours</span>.<br><br>
+                
+                <strong style="font-size:1.3em;">Kimmy, will you be my girlfriend?</strong>
+            </div>
+            
+            <div class="final-buttons">
+                <button class="yes-btn" onclick="sheSaidYes()">YES! I WILL! 💕</button>
+                <button class="no-btn" onclick="sheSaidNo()">I need to say no... 💔</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NO SCREEN: Respectful Response -->
+    <div class="no-screen" id="noScreen">
+        <div class="no-content">
+            <div style="font-size:60px; margin-bottom:20px;">🌙</div>
+            <h2>I Understand</h2>
+            <p>
+                Kimmy, your feelings matter more than anything.<br><br>
+                
+                If your heart isn't ready, or if I'm not the one,<br>
+                I respect that completely.<br><br>
+                
+                <span class="highlight">But can I ask one thing?</span><br><br>
+                
+                Don't let this change what we have.<br>
+                Whether as friends or something more,<br>
+                having you in my life means the world.<br><br>
+                
+                I'll be here, always cheering for your happiness.<br>
+                Even if it's not with me.<br><br>
+                
+                <em style="color:#888;">— The person who cares about you</em>
+            </p>
+            <button class="back-btn" onclick="goBack()">Take me back to the question 💫</button>
+        </div>
+    </div>
+
+    <!-- CELEBRATION -->
+    <div class="celebration" id="celebration">
+        <h2>🎉 SHE SAID YES! 🎉</h2>
+        <p style="font-size:1.5em; color:#2c3e50; margin-bottom:20px;">
+            Kimmy, you just made all my dreams come true! 💑
+        </p>
+        <div style="font-size:100px; animation:heartbeat 1s infinite;">❤️</div>
+        <p style="margin-top:30px; color:#7f8c8d; font-size:1.2em;">
+            I promise to love you, protect you, and make you smile every day.
+        </p>
+    </div>
+
+    <script>
+        let currentScreen = 1;
+        let candlesBlown = 0;
+        let heartPiecesPlaced = 0;
+
+        // Auto-play music on page load
+        window.addEventListener('load', function() {
+            const music = document.getElementById('bg-music');
+            music.volume = 0.5; // Set volume to 50%
+            
+            // Try to play (some browsers may block autoplay)
+            const playPromise = music.play();
+            
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log('Autoplay blocked, will try on first interaction');
+                    // Fallback: play on first click anywhere
+                    document.addEventListener('click', function initAudio() {
+                        music.play();
+                        document.removeEventListener('click', initAudio);
+                    }, { once: true });
+                });
+            }
+        });
+
+        // Create progress dots
+        function createDots() {
+            const container = document.getElementById('progressDots');
+            for (let i = 0; i < 6; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.id = `dot${i}`;
+                container.appendChild(dot);
+            }
+            updateDots();
+        }
+
+        function updateDots() {
+            for (let i = 0; i < 6; i++) {
+                const dot = document.getElementById(`dot${i}`);
+                if (i < currentScreen - 1) dot.className = 'dot completed';
+                else if (i === currentScreen - 1) dot.className = 'dot active';
+                else dot.className = 'dot';
+            }
+        }
+
+        function nextScreen() {
+            document.getElementById(`screen${currentScreen}`).classList.remove('visible');
+            document.getElementById(`screen${currentScreen}`).classList.add('hidden');
+            currentScreen++;
+            
+            if (document.getElementById(`screen${currentScreen}`)) {
+                document.getElementById(`screen${currentScreen}`).classList.remove('hidden');
+                document.getElementById(`screen${currentScreen}`).classList.add('visible');
+            }
+            updateDots();
+            
+            if (currentScreen === 5) initHeartPuzzle();
+        }
+
+        // Screen 1: Open Envelope
+        function openEnvelope() {
+            document.getElementById('envelope').classList.add('open');
+            setTimeout(() => {
+                nextScreen();
+            }, 2500);
+        }
+
+        // Screen 2-4: Reveal Clues
+        function revealClue(num) {
+            const box = document.getElementById(`clue${num}`);
+            box.classList.add('revealed');
+            
+            const secrets = box.querySelectorAll('.secret');
+            secrets.forEach(s => {
+                s.style.color = '#ff6b6b';
+                s.style.textShadow = '0 0 10px rgba(255, 107, 107, 0.5)';
+            });
+            
+            setTimeout(() => {
+                nextScreen();
+            }, 2000);
+        }
+
+        // Screen 5: Heart Puzzle
+        function initHeartPuzzle() {
+            const container = document.getElementById('heartLock');
+            const pieces = ['❤️', '💖', '💕', '💗', '💝'];
+            const positions = [
+                {top: '0px', left: '70px'},
+                {top: '40px', left: '20px'},
+                {top: '40px', left: '120px'},
+                {top: '100px', left: '40px'},
+                {top: '100px', left: '100px'}
+            ];
+            
+            positions.forEach((pos, i) => {
+                const slot = document.createElement('div');
+                slot.className = 'heart-slot';
+                slot.style.top = pos.top;
+                slot.style.left = pos.left;
+                slot.dataset.index = i;
+                container.appendChild(slot);
+            });
+            
+            pieces.forEach((piece, i) => {
+                const p = document.createElement('div');
+                p.className = 'heart-piece';
+                p.textContent = piece;
+                p.style.top = (150 + Math.random() * 50) + 'px';
+                p.style.left = (Math.random() * 140) + 'px';
+                p.onclick = () => placePiece(p, i);
+                container.appendChild(p);
+            });
+        }
+
+        function placePiece(piece, index) {
+            if (piece.classList.contains('placed')) return;
+            
+            const slots = document.querySelectorAll('.heart-slot');
+            const slot = slots[index];
+            
+            piece.style.top = slot.style.top;
+            piece.style.left = slot.style.left;
+            piece.classList.add('placed');
+            piece.style.cursor = 'default';
+            
+            heartPiecesPlaced++;
+            createSparkle(piece.offsetLeft + 25, piece.offsetTop + 25);
+            
+            if (heartPiecesPlaced >= 5) {
+                document.getElementById('heartMessage').style.opacity = '1';
+                setTimeout(nextScreen, 2000);
+            }
+        }
+
+        function createSparkle(x, y) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.textContent = '✨';
+            sparkle.style.left = x + 'px';
+            sparkle.style.top = y + 'px';
+            sparkle.style.fontSize = '30px';
+            document.body.appendChild(sparkle);
+            setTimeout(() => sparkle.remove(), 2000);
+        }
+
+        // Screen 6: Candles
+        function blowCandle(candle, num) {
+            if (candle.classList.contains('blown')) return;
+            
+            candle.classList.remove('lit');
+            candle.classList.add('blown');
+            candlesBlown++;
+            
+            const messages = [
+                "Wish #1: I wish she knew how I feel...",
+                "Wish #2: I wish I could hold her hand...",
+                "Wish #3: I wish she would be mine..."
+            ];
+            
+            const msg = document.getElementById('candleMessage');
+            msg.textContent = messages[num - 1];
+            msg.style.opacity = '1';
+            
+            for (let i = 0; i < 3; i++) {
+                const wind = document.createElement('div');
+                wind.textContent = '💨';
+                wind.style.position = 'absolute';
+                wind.style.fontSize = '20px';
+                wind.style.left = candle.offsetLeft + 'px';
+                wind.style.top = candle.offsetTop - 20 + 'px';
+                wind.style.animation = 'float-heart 1.5s forwards';
+                candle.parentElement.appendChild(wind);
+                setTimeout(() => wind.remove(), 1500);
+            }
+            
+            if (candlesBlown >= 3) {
+                setTimeout(() => {
+                    revealProposal();
+                }, 2000);
+            }
+        }
+
+        function revealProposal() {
+            document.getElementById('proposalScene').style.display = 'flex';
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('div');
+                    heart.textContent = ['❤️', '💖', '💕'][Math.floor(Math.random() * 3)];
+                    heart.style.position = 'fixed';
+                    heart.style.left = Math.random() * 100 + '%';
+                    heart.style.bottom = '-50px';
+                    heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+                    heart.style.animation = 'float-heart 6s linear forwards';
+                    heart.style.pointerEvents = 'none';
+                    heart.style.zIndex = '999';
+                    document.body.appendChild(heart);
+                    setTimeout(() => heart.remove(), 6000);
+                }, i * 100);
+            }
+        }
+
+        function sheSaidYes() {
+            document.getElementById('proposalScene').style.display = 'none';
+            document.getElementById('celebration').style.display = 'flex';
+            
+            for (let i = 0; i < 200; i++) {
+                setTimeout(() => {
+                    const c = document.createElement('div');
+                    c.style.position = 'fixed';
+                    c.style.width = (Math.random() * 10 + 5) + 'px';
+                    c.style.height = c.style.width;
+                    c.style.background = ['#e74c3c', '#f39c12', '#2ecc71', '#9b59b6', '#3498db', '#e84393'][Math.floor(Math.random() * 6)];
+                    c.style.left = Math.random() * 100 + '%';
+                    c.style.top = '-20px';
+                    c.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+                    c.style.animation = `confetti-fall ${Math.random() * 3 + 2}s linear forwards`;
+                    c.style.transform = `rotate(${Math.random() * 360}deg)`;
+                    document.getElementById('celebration').appendChild(c);
+                }, i * 20);
+            }
+            
+            for (let i = 0; i < 40; i++) {
+                setTimeout(() => {
+                    const h = document.createElement('div');
+                    h.textContent = '❤️';
+                    h.style.position = 'fixed';
+                    h.style.fontSize = (Math.random() * 30 + 20) + 'px';
+                    h.style.left = '50%';
+                    h.style.top = '50%';
+                    h.style.transform = 'translate(-50%, -50%)';
+                    h.style.pointerEvents = 'none';
+                    h.style.animation = 'explode 2s ease-out forwards';
+                    h.style.setProperty('--tx', (Math.random() - 0.5) * 600 + 'px');
+                    h.style.setProperty('--ty', (Math.random() - 0.5) * 600 + 'px');
+                    document.getElementById('celebration').appendChild(h);
+                }, i * 50);
+            }
+        }
+
+        // RESPECTFUL "NO" RESPONSE
+        function sheSaidNo() {
+            document.getElementById('proposalScene').style.display = 'none';
+            document.getElementById('noScreen').style.display = 'flex';
+        }
+
+        function goBack() {
+            document.getElementById('noScreen').style.display = 'none';
+            document.getElementById('proposalScene').style.display = 'flex';
+        }
+
+        // Initialize
+        createDots();
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes float-heart {
+                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+            }
+            @keyframes explode {
+                0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+                100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.5); opacity: 0; }
+            }
+            @keyframes confetti-fall {
+                to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
